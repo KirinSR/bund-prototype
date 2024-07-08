@@ -1464,6 +1464,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 10
+  recoilLength: 0.5
+  recoilFactor: 10
+  isRecoiling: 1
 --- !u!50 &1839995807
 Rigidbody2D:
   serializedVersion: 4
@@ -1821,6 +1824,10 @@ MonoBehaviour:
   SideAttackArea: {x: 4.5, y: 3.5}
   UpAttackArea: {x: 3.5, y: 4.5}
   DownAttackArea: {x: 3.5, y: 4.5}
+  recoilXSteps: 5
+  recoilYSteps: 5
+  recoilXSpeed: 50
+  recoilYSpeed: 50
 --- !u!95 &1907116410
 Animator:
   serializedVersion: 5
@@ -1859,6 +1866,9 @@ MonoBehaviour:
   wallRunning: 0
   running: 0
   wallSliding: 0
+  recoilingX: 0
+  recoilingY: 0
+  lookingRight: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

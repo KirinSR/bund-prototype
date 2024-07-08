@@ -9,4 +9,6 @@ public class PlayerStateList : MonoBehaviour
     public bool wallRunning = false;
     public bool running = false;
     public bool wallSliding = false;
+    public bool recoilingX, recoilingY;
+    public bool lookingRight;
 }

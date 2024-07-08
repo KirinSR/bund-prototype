@@ -67,6 +67,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Vector2 SideAttackArea, UpAttackArea, DownAttackArea; 
     [Space(5)]
 
+    [Header("Attack Settings:")]
+    [SerializeField] int recoilXSteps = 5;
+    [SerializeField] int recoilYSteps = 5;
+    [SerializeField] float recoilXSpeed = 50;
+    [SerializeField] float recoilYSpeed = 50;
+    int stepsXRecoiled, stepsYRecoiled;
+    [Space(5)]
+
     PlayerStateList pState;
     private Rigidbody2D rb;
     private float xAxis, yAxis;
@@ -140,10 +148,12 @@ public class PlayerController : MonoBehaviour
         if (xAxis < 0)
         {
             transform.localScale = new Vector2(-1, transform.localScale.y);
+            pState.lookingRight = false;
         }
         else if (xAxis > 0)
         {
             transform.localScale = new Vector2(1, transform.localScale.y);
+            pState.lookingRight = true;
         }
     }
 
@@ -352,36 +362,37 @@ public class PlayerController : MonoBehaviour
             anim.SetTrigger("Attacking");
 
             if (yAxis == 0 || yAxis < 0 && Grounded()){
-                Hit(SideAttackTransform, SideAttackArea);
+                Hit(SideAttackTransform, SideAttackArea, ref pState.recoilingX, recoilXSpeed);
                 Instantiate(slashEffect, SideAttackTransform);
             }
             else if (yAxis > 0)
             {
-                Hit(DownAttackTransform, DownAttackArea);
-                SlasheffectAngle(slashEffect, 90, UpAttackTransform);
+                Hit(UpAttackTransform, UpAttackArea, ref pState.recoilingY, recoilYSpeed);
+                SlasheffectAngle(slashEffect, -90, DownAttackTransform);
 
             }
             else if (yAxis < 0 && !Grounded())
             {
-                Hit(UpAttackTransform, UpAttackArea);
-                SlasheffectAngle(slashEffect, -90, DownAttackTransform);
+                Hit(DownAttackTransform, DownAttackArea, ref pState.recoilingY, recoilYSpeed);
+                SlasheffectAngle(slashEffect, 80, UpAttackTransform);
             }
         }
     }
 
-    private void Hit(Transform _attackTransform, Vector2 _attackArea)
+    private void Hit(Transform _attackTransform, Vector2 _attackArea, ref bool _recoilDir, float _recoilStrength)
     {
         Collider2D[] objectsToHit = Physics2D.OverlapBoxAll(_attackTransform.position, _attackArea, 0, attackableLayer);
         if (objectsToHit.Length > 0)
         {
-            Debug.Log("Hit");
+            _recoilDir = true;
         }
 
         for (int i = 0; i < objectsToHit.Length; i++)
         {
             if (objectsToHit[i].GetComponent<Enemy>() != null)
             {
-                objectsToHit[i].GetComponent<Enemy>().EnemyHit(damage);
+                objectsToHit[i].GetComponent<Enemy>().EnemyHit
+                (damage, (transform.position - objectsToHit[i].transform.position).normalized, _recoilStrength);
             }
         }
     }
@@ -391,5 +402,76 @@ public class PlayerController : MonoBehaviour
         _slashEffect = Instantiate(_slashEffect, _attackTransform);
         _slashEffect.transform.eulerAngles = new Vector3(0, 0, _effectAngle);
         _slashEffect.transform.localScale = new Vector2(transform.localScale.x, transform.localScale.y);
+    }
+
+    void Recoil()
+    {
+        if(pState.recoilingX)
+        {
+            if(pState.lookingRight)
+            {
+                rb.velocity = new Vector2(-recoilXSpeed, 0);
+            }
+            else
+            {
+                rb.velocity = new Vector2(recoilXSpeed, 0);
+            }
+        }
+
+        if(pState.recoilingY)
+        {
+            rb.gravityScale = 0;
+
+            if (yAxis < 0)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, recoilYSpeed);
+            }
+            else 
+            {
+                rb.velocity = new Vector2(rb.velocity.x, -recoilYSpeed);
+            }
+            airJumpCounter = 0;
+        }
+
+        else
+        {
+            rb.gravityScale = gravity;
+        }
+
+        if (pState.recoilingX && stepsXRecoiled < recoilXSteps) 
+        {
+            stepsXRecoiled ++;
+        }
+        else
+        {
+            StopRecoilX();
+        }
+
+        if (pState.recoilingY && stepsYRecoiled < recoilYSteps) 
+        {
+            stepsYRecoiled ++;
+        }
+        else
+        {
+            StopRecoilY();
+        }
+
+        if (Grounded())
+        {
+            StopRecoilY();
+        }
+    }
+
+// stop recoiling
+    void StopRecoilX()
+    {
+        stepsXRecoiled = 0;
+        pState.recoilingX = false;
+    }
+
+        void StopRecoilY()
+    {
+        stepsYRecoiled = 0;
+        pState.recoilingY = false;
     }
 }
